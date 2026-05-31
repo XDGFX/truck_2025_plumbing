@@ -144,3 +144,19 @@ Enforce all rules in this file in `validate_diagram()`, including hop-type check
 
 ## Session Handoff Compatibility
 Continue accepting legacy `edges` while adding `connections` support, with `connections` as preferred syntax.
+
+---
+
+## Domain Glossary
+
+## Crosslink
+A pipe run connecting the low ports of two parallel fresh water tanks, equalising their fill levels so both tanks draw and fill simultaneously. In this project: 40mm flexible DWV hose between the 1-1/2" BSP DN40mm male low ports of the two 95L Camec tanks, via DWV BSP female → 40mm barb adapters.
+
+## Bung
+A male BSP plug fitted to an unused tank port. Modelled as a component in every diagram because it is a real purchased part that must appear in the BOM. Unused ports must never be silently omitted.
+
+## Gravity Filler
+An external deck-mounted fitting that accepts water from a hose and delivers it into the tank system by gravity. In this project: a Camec combination filler with a 25mm barbed fill port and a 10mm barbed breather/vent port. Acts as the single external interface for both the fill line and the breather line.
+
+## Flex Union
+A flexible disconnect union in a rigid pipe run that allows a tank to be physically removed for service without disturbing the fixed pipework. Modelled as a two-port fitting component.

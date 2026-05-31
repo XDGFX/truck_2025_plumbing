@@ -4,7 +4,6 @@ Configuration constants for truck plumbing diagram generation.
 
 # File patterns and shared library location.
 PLUMBING_FILE_PATTERN = "src/*.yml"
-LOOM_FILE_PATTERN = PLUMBING_FILE_PATTERN
 SHARED_COMPONENTS_FILE = "shared.yml"
 
 # Graphviz runtime.

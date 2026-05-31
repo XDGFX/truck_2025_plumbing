@@ -28,7 +28,7 @@ pipes:
     # optional pipe metadata:
     material: PEX-B
     size: '1/2"'
-    service_rating: potable
+    service_rating: potable    # potable · waste · vent · hot — sets pipe colour automatically
     description: Cold supply run
 
 connections:
@@ -119,6 +119,17 @@ pipes:
 ```
 
 Each use of a pipe name in a `connections` chain creates a fresh unnamed pipe run — the same name can appear in multiple chains without conflict.
+
+### Service colours
+
+Setting `service_rating` on a pipe automatically applies a fill and border colour:
+
+| `service_rating` | Fill | Border |
+|-----------------|------|--------|
+| `potable` | `LB` (light blue) | `BU` (blue) |
+| `waste` | `PK` (pink) | `RD` (red) |
+| `vent` | `GN` (green) | `OL` (olive) |
+| `hot` | `GD` (gold) | `OG` (orange) |
 
 ---
 
@@ -238,6 +249,51 @@ your project's prepend file (`shared.yml` by default). The tables below document
 |-----|-------|-------|
 | `greywater_vent` | Greywater Vent | vent_in |
 | `overflow_vent` | Overflow Vent | vent_in |
+
+---
+
+## Named Colours
+
+Any field that accepts a colour value (`fillcolor`, `color`, `bgcolor`) accepts either a hex string or a 2-letter WireViz colour code:
+
+```yaml
+components:
+  my_valve:
+    template: valve
+    fillcolor: GN    # same as "#00ff00"
+    color: OL        # same as "#708000"
+
+diagram:
+  bgcolor: IV        # ivory background
+```
+
+Full palette:
+
+| Code | Hex | Name |
+|------|-----|------|
+| `BK` | `#000000` | black |
+| `WH` | `#ffffff` | white |
+| `GY` | `#999999` | grey |
+| `PK` | `#ff66cc` | pink |
+| `RD` | `#ff0000` | red |
+| `OG` | `#ff8000` | orange |
+| `YE` | `#ffff00` | yellow |
+| `OL` | `#708000` | olive green |
+| `GN` | `#00ff00` | green |
+| `TQ` | `#00ffff` | turquoise |
+| `LB` | `#a0dfff` | light blue |
+| `BU` | `#0066ff` | blue |
+| `VT` | `#8000ff` | violet |
+| `BN` | `#895956` | brown |
+| `BG` | `#ceb673` | beige |
+| `IV` | `#f5f0d0` | ivory |
+| `SL` | `#708090` | slate |
+| `CU` | `#d6775e` | copper |
+| `SN` | `#aaaaaa` | tin |
+| `SR` | `#84878c` | silver |
+| `GD` | `#ffcf80` | gold |
+
+Codes are case-insensitive. Hex strings and Graphviz named colours (e.g. `white`, `transparent`) pass through unchanged.
 
 ---
 

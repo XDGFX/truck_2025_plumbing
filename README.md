@@ -33,6 +33,10 @@ visual templates. It is merged before each diagram file is processed. It is not 
 library — define only what is relevant to your project, and omit the file entirely if
 you do not need shared definitions.
 
+## Named Colours
+
+All colour fields (`fillcolor`, `color`, `bgcolor`) accept 2-letter WireViz colour codes as well as hex strings. For example, `fillcolor: RD` is equivalent to `fillcolor: "#ff0000"`. See [SYNTAX.md](SYNTAX.md#named-colours) for the full palette.
+
 ## Requirements
 
 - Python packages: install `PyYAML`

@@ -66,7 +66,12 @@ def validate_connections_chain(
             return parsed, "pipe"
         raise ValueError(f"Unknown name '{base}' not found in components or pipes")
 
-    parsed_tokens = [classify(t) for t in chain]
+    parsed_tokens = []
+    for i, t in enumerate(chain):
+        try:
+            parsed_tokens.append(classify(t))
+        except ValueError as exc:
+            raise ValueError(f"token[{i}] {t!r}: {exc}") from exc
 
     hops = []
     for i in range(len(parsed_tokens) - 1):
@@ -186,11 +191,44 @@ def dot_quote(value):
     return f'"{text}"'
 
 
+NAMED_COLORS: dict[str, str] = {
+    "BK": "#000000",  # black
+    "WH": "#ffffff",  # white
+    "GY": "#999999",  # grey
+    "PK": "#ff66cc",  # pink
+    "RD": "#ff0000",  # red
+    "OG": "#ff8000",  # orange
+    "YE": "#ffff00",  # yellow
+    "OL": "#708000",  # olive green
+    "GN": "#00ff00",  # green
+    "TQ": "#00ffff",  # turquoise
+    "LB": "#a0dfff",  # light blue
+    "BU": "#0066ff",  # blue
+    "VT": "#8000ff",  # violet
+    "BN": "#895956",  # brown
+    "BG": "#ceb673",  # beige
+    "IV": "#f5f0d0",  # ivory
+    "SL": "#708090",  # slate
+    "CU": "#d6775e",  # copper
+    "SN": "#aaaaaa",  # tin
+    "SR": "#84878c",  # silver
+    "GD": "#ffcf80",  # gold
+}
+
+
+def resolve_color(value: str) -> str:
+    """Resolve a colour value: WireViz 2-letter code → hex, or pass hex through."""
+    upper = value.strip().upper()
+    if upper in NAMED_COLORS:
+        return NAMED_COLORS[upper]
+    return value
+
+
 _SERVICE_COLORS = {
-    "potable": ("#dbeafe", "#2563eb"),
-    "waste":   ("#fee2e2", "#b91c1c"),
-    "vent":    ("#dcfce7", "#166534"),
-    "hot":     ("#fed7aa", "#c2410c"),
+    "potable": ("LB", "BU"),   # light blue fill, blue border
+    "waste":   ("PK", "RD"),   # pink fill, red border
+    "vent":    ("GN", "OL"),   # green fill, olive border
+    "hot":     ("GD", "OG"),   # gold fill, orange border
 }
 
 
@@ -198,8 +236,8 @@ def build_html_label(node_id, component_spec):
     """Build a Graphviz HTML label for a component with named ports."""
     label = escape(str(component_spec.get("label", node_id)))
     ports = normalise_ports(component_spec)
-    fill_color = component_spec.get("fillcolor", "#e2e8f0")
-    border_color = component_spec.get("color", "#64748b")
+    fill_color = resolve_color(component_spec.get("fillcolor", "#e2e8f0"))
+    border_color = resolve_color(component_spec.get("color", "#64748b"))
 
     ncols = 3  # port name | connection size | gender
     rows = []
@@ -222,9 +260,9 @@ def build_html_label(node_id, component_spec):
             f'{" &middot; ".join(meta_parts)}</TD></TR>'
         )
 
-    # Port rows: flat 3-column table so all rows share the same column widths.
+    # Port rows omitted for simple components — edges attach to node border.
     # Two PORT anchors per row: port__w on col 1 (incoming :w), port__e on col 3 (outgoing :e).
-    for port in ports:
+    for port in ([] if component_spec.get("simple") else ports):
         port_name = str(port["name"])
         size_text = escape(str(port.get("connection_size", "")))
         gender_text = escape(str(port.get("gender", "")))
@@ -259,7 +297,8 @@ def build_pipe_html_label(pipe_name, pipe_spec):
     """Build a Graphviz HTML label for a pipe segment."""
     label = escape(str(pipe_spec.get("label", pipe_name)))
     service = pipe_spec.get("service_rating", "")
-    fill_color, border_color = _SERVICE_COLORS.get(service, ("#f1f5f9", "#64748b"))
+    raw_fill, raw_border = _SERVICE_COLORS.get(service, ("#f1f5f9", "#64748b"))
+    fill_color, border_color = resolve_color(raw_fill), resolve_color(raw_border)
 
     rows = []
     rows.append(
@@ -291,13 +330,13 @@ def render_component_node(node_id, component_spec):
     """Render a component into a DOT node statement."""
     ports = normalise_ports(component_spec)
     label = component_spec.get("label", node_id)
-    node_color = component_spec.get("color", "#334155")
-    fill_color = component_spec.get("fillcolor", "#e2e8f0")
+    node_color = resolve_color(component_spec.get("color", "#334155"))
+    fill_color = resolve_color(component_spec.get("fillcolor", "#e2e8f0"))
     shape = component_spec.get("shape", "box")
     style = component_spec.get("style", "rounded,filled")
     fontname = component_spec.get("fontname", config.GRAPHVIZ_FONT)
 
-    if ports:
+    if ports or component_spec.get("simple"):
         html_label = build_html_label(node_id, component_spec)
         return (
             f"  {dot_quote(node_id)} "
@@ -335,31 +374,52 @@ def validate_diagram(diagram, file_path):
             raise ValueError(
                 f"{file_path}: component '{component_name}' must define a label"
             )
+        is_simple = bool(component_spec.get("simple"))
         has_ports = "ports" in component_spec
         has_portcount = "portcount" in component_spec
-        if not has_ports and not has_portcount:
-            raise ValueError(
-                f"{file_path}: component '{component_name}' must define 'ports' or 'portcount'"
-            )
-        if has_ports and has_portcount:
-            port_list = normalise_ports(component_spec)
-            if component_spec["portcount"] != len(port_list):
+        if is_simple:
+            if has_ports or has_portcount:
                 raise ValueError(
-                    f"{file_path}: component '{component_name}' portcount "
-                    f"{component_spec['portcount']} does not match ports length {len(port_list)}"
+                    f"{file_path}: simple component '{component_name}' must not define 'ports' or 'portcount'"
                 )
+        else:
+            if not has_ports and not has_portcount:
+                raise ValueError(
+                    f"{file_path}: component '{component_name}' must define 'ports' or 'portcount'"
+                )
+            if has_ports and has_portcount:
+                port_list = normalise_ports(component_spec)
+                if component_spec["portcount"] != len(port_list):
+                    raise ValueError(
+                        f"{file_path}: component '{component_name}' portcount "
+                        f"{component_spec['portcount']} does not match ports length {len(port_list)}"
+                    )
 
     component_names = set(components.keys())
     pipe_names = set(diagram.get("pipes", {}).keys())
 
-    for chain in connections:
-        validate_connections_chain(chain, component_names, pipe_names)
+    for chain_idx, chain in enumerate(connections):
+        try:
+            validate_connections_chain(chain, component_names, pipe_names)
+        except ValueError as exc:
+            raise ValueError(
+                f"{file_path}: connections[{chain_idx}] {chain}: {exc}"
+            ) from exc
 
         for token in chain:
-            parsed = parse_connection_token(token)
+            try:
+                parsed = parse_connection_token(token)
+            except ValueError as exc:
+                raise ValueError(
+                    f"{file_path}: connections[{chain_idx}] {chain}, token {token!r}: {exc}"
+                ) from exc
             base = parsed["base_name"]
             port = parsed["port"]
             if base in component_names and port is not None:
+                if components[base].get("simple"):
+                    raise ValueError(
+                        f"{file_path}: simple component '{base}' does not support named port references in connections"
+                    )
                 comp_ports = normalise_ports(components[base])
                 port_names = {p["name"] for p in comp_ports}
                 if comp_ports and port not in port_names:
@@ -374,7 +434,7 @@ def build_dot(diagram, file_path):
     title = graph_defaults.get("title", Path(file_path).stem.replace("_", " ").title())
     rankdir = graph_defaults.get("rankdir", config.GRAPHVIZ_DEFAULTS["rankdir"])
     splines = graph_defaults.get("splines", config.GRAPHVIZ_DEFAULTS["splines"])
-    bgcolor = graph_defaults.get("bgcolor", config.GRAPHVIZ_DEFAULTS["bgcolor"])
+    bgcolor = resolve_color(graph_defaults.get("bgcolor", config.GRAPHVIZ_DEFAULTS["bgcolor"]))
     ranksep = graph_defaults.get("ranksep", "2")
     nodesep = graph_defaults.get("nodesep", "0.33")
     fontname = graph_defaults.get("fontname", config.GRAPHVIZ_FONT)
@@ -402,8 +462,13 @@ def build_dot(diagram, file_path):
     anon_counter = 0
     pipe_counter = 0
 
-    for chain in connections:
-        hops = validate_connections_chain(chain, component_names, pipe_names)
+    for chain_idx, chain in enumerate(connections):
+        try:
+            hops = validate_connections_chain(chain, component_names, pipe_names)
+        except ValueError as exc:
+            raise ValueError(
+                f"{file_path}: connections[{chain_idx}] {chain}: {exc}"
+            ) from exc
 
         token_info = []
         for token in chain:
@@ -451,6 +516,8 @@ def build_dot(diagram, file_path):
                         port = comp_ports[0]["name"]
                 if port:
                     tail = f'{dot_quote(fi["node_id"])}:{port}__e:e'
+                elif diagram["components"][fi["base"]].get("simple"):
+                    tail = f'{dot_quote(fi["node_id"])}:e'
                 else:
                     tail = dot_quote(fi["node_id"])
 
@@ -464,6 +531,8 @@ def build_dot(diagram, file_path):
                         port = comp_ports[0]["name"]
                 if port:
                     head = f'{dot_quote(ti["node_id"])}:{port}__w:w'
+                elif diagram["components"][ti["base"]].get("simple"):
+                    head = f'{dot_quote(ti["node_id"])}:w'
                 else:
                     head = dot_quote(ti["node_id"])
 

@@ -186,42 +186,111 @@ def dot_quote(value):
     return f'"{text}"'
 
 
-def build_html_label(component_name, component_spec):
+_SERVICE_COLORS = {
+    "potable": ("#dbeafe", "#2563eb"),
+    "waste":   ("#fee2e2", "#b91c1c"),
+    "vent":    ("#dcfce7", "#166534"),
+    "hot":     ("#fed7aa", "#c2410c"),
+}
+
+
+def build_html_label(node_id, component_spec):
     """Build a Graphviz HTML label for a component with named ports."""
-    title = escape(str(component_spec.get("label", component_name)))
+    label = escape(str(component_spec.get("label", node_id)))
     ports = normalise_ports(component_spec)
-    fill_color = escape(str(component_spec.get("fillcolor", "#F5F0D0")))
+    fill_color = component_spec.get("fillcolor", "#e2e8f0")
+    border_color = component_spec.get("color", "#64748b")
 
-    if not ports:
-        return None
+    ncols = 3  # port name | connection size | gender
+    rows = []
 
-    port_rows = "\n".join(
-        f'   <tr><td port="{escape(port["name"])}" balign="left">{escape(port["name"])}</td></tr>'
-        for port in ports
+    # Title row with template colour
+    rows.append(
+        f'<TR><TD COLSPAN="{ncols}" BORDER="1" BGCOLOR="{escape(fill_color)}" '
+        f'COLOR="{escape(border_color)}" ALIGN="CENTER">{label}</TD></TR>'
     )
 
+    # Optional metadata: manufacturer, model, mpn, supplier
+    meta_parts = []
+    for key in ("manufacturer", "model", "mpn", "supplier"):
+        val = component_spec.get(key)
+        if val:
+            meta_parts.append(escape(str(val)))
+    if meta_parts:
+        rows.append(
+            f'<TR><TD COLSPAN="{ncols}" BORDER="1" ALIGN="CENTER">'
+            f'{" &middot; ".join(meta_parts)}</TD></TR>'
+        )
+
+    # Port rows: flat 3-column table so all rows share the same column widths.
+    # Two PORT anchors per row: port__w on col 1 (incoming :w), port__e on col 3 (outgoing :e).
+    for port in ports:
+        port_name = str(port["name"])
+        size_text = escape(str(port.get("connection_size", "")))
+        gender_text = escape(str(port.get("gender", "")))
+        rows.append(
+            f'<TR>'
+            f'<TD PORT="{escape(port_name)}__w" BORDER="1" ALIGN="CENTER">{escape(port_name)}</TD>'
+            f'<TD BORDER="1" ALIGN="CENTER">{size_text}</TD>'
+            f'<TD PORT="{escape(port_name)}__e" BORDER="1" ALIGN="CENTER">{gender_text}</TD>'
+            f'</TR>'
+        )
+
+    # Description at bottom (collapsed + truncated)
+    desc = str(component_spec.get("description", "")).strip()
+    if desc:
+        desc_clean = " ".join(desc.split())
+        if len(desc_clean) > 80:
+            desc_clean = desc_clean[:77] + "..."
+        rows.append(
+            f'<TR><TD COLSPAN="{ncols}" BORDER="1" ALIGN="CENTER">'
+            f'{escape(desc_clean)}</TD></TR>'
+        )
+
+    rows_html = "\n".join(f"  {r}" for r in rows)
     return (
-        "<\n"
-        f'<table border="0" cellspacing="0" cellpadding="0" bgcolor="{fill_color}">\n'
-        f' <tr><td>\n'
-        f'  <table border="0" cellspacing="0" cellpadding="3" cellborder="1">\n'
-        f'   <tr><td balign="left">{title}</td></tr>\n'
-        f'  </table>\n'
-        f' </td></tr>\n'
-        f' <tr><td>\n'
-        f'  <table border="0" cellspacing="0" cellpadding="3" cellborder="1">\n'
-        f"{port_rows}\n"
-        f'  </table>\n'
-        f' </td></tr>\n'
-        f'</table>\n'
-        ">"
+        '<<TABLE BORDER="0" CELLSPACING="0" CELLPADDING="3">\n'
+        f'{rows_html}\n'
+        '</TABLE>>'
     )
 
 
-def render_component_node(component_name, component_spec):
+def build_pipe_html_label(pipe_name, pipe_spec):
+    """Build a Graphviz HTML label for a pipe segment."""
+    label = escape(str(pipe_spec.get("label", pipe_name)))
+    service = pipe_spec.get("service_rating", "")
+    fill_color, border_color = _SERVICE_COLORS.get(service, ("#f1f5f9", "#64748b"))
+
+    rows = []
+    rows.append(
+        f'<TR><TD BORDER="1" BGCOLOR="{fill_color}" COLOR="{border_color}" ALIGN="CENTER">'
+        f'{label}</TD></TR>'
+    )
+
+    meta_parts = []
+    for key in ("size", "material"):
+        val = pipe_spec.get(key)
+        if val:
+            meta_parts.append(escape(str(val)))
+    if service:
+        meta_parts.append(escape(str(service)))
+    if meta_parts:
+        rows.append(
+            f'<TR><TD BORDER="1" ALIGN="LEFT">{" &middot; ".join(meta_parts)}</TD></TR>'
+        )
+
+    rows_html = "\n".join(f"  {r}" for r in rows)
+    return (
+        '<<TABLE BORDER="0" CELLSPACING="0" CELLPADDING="0">\n'
+        f'{rows_html}\n'
+        '</TABLE>>'
+    )
+
+
+def render_component_node(node_id, component_spec):
     """Render a component into a DOT node statement."""
     ports = normalise_ports(component_spec)
-    label = component_spec.get("label", component_name)
+    label = component_spec.get("label", node_id)
     node_color = component_spec.get("color", "#334155")
     fill_color = component_spec.get("fillcolor", "#e2e8f0")
     shape = component_spec.get("shape", "box")
@@ -229,15 +298,14 @@ def render_component_node(component_name, component_spec):
     fontname = component_spec.get("fontname", config.GRAPHVIZ_FONT)
 
     if ports:
-        html_label = build_html_label(component_name, component_spec)
+        html_label = build_html_label(node_id, component_spec)
         return (
-            f"  {dot_quote(component_name)} "
-            f"[fontname={dot_quote(fontname)}, fillcolor=\"#FFFFFF\", shape=box, style=filled, "
-            f"label={html_label}];"
+            f"  {dot_quote(node_id)} "
+            f"[fontname={dot_quote(fontname)}, shape=none, margin=0, label={html_label}];"
         )
 
     return (
-        f"  {dot_quote(component_name)} "
+        f"  {dot_quote(node_id)} "
         f"[shape={dot_quote(shape)}, style={dot_quote(style)}, "
         f"fillcolor={dot_quote(fill_color)}, color={dot_quote(node_color)}, "
         f"fontname={dot_quote(fontname)}, label={dot_quote(label)}];"
@@ -319,73 +387,87 @@ def build_dot(diagram, file_path):
     lines.append(
         f'  node [fillcolor="#FFFFFF" fontname={dot_quote(fontname)} height=0 margin=0 shape=none style=filled width=0];'
     )
-    lines.append(f"  edge [fontname={dot_quote(fontname)}, style=bold];")
+    lines.append(f"  edge [fontname={dot_quote(fontname)}, style=bold, dir=none];");
     lines.append('  labelloc="t";')
     lines.append(f"  label={dot_quote(title)};")
     lines.append("  fontsize=20;")
 
-    for component_name, component_spec in diagram["components"].items():
-        lines.append(render_component_node(component_name, component_spec))
-
     lines.append("")
     connections = diagram.get("connections", [])
-    if connections:
-        pipes_spec = diagram.get("pipes", {})
-        component_names = set(diagram["components"].keys())
-        pipe_names = set(pipes_spec.keys())
-        pipe_counter = 0
+    pipes_spec = diagram.get("pipes", {})
+    component_names = set(diagram["components"].keys())
+    pipe_names = set(pipes_spec.keys())
 
-        for chain in connections:
-            hops = validate_connections_chain(chain, component_names, pipe_names)
+    emitted_nodes = set()
+    anon_counter = 0
+    pipe_counter = 0
 
-            # Classify and assign pipe node IDs for every token in this chain.
-            token_info = []
-            for token in chain:
-                parsed = parse_connection_token(token)
-                base = parsed["base_name"]
-                port = parsed["port"]
-                if base in pipe_names:
-                    node_id = f"{base}__{pipe_counter}"
-                    pipe_counter += 1
-                    pipe_label = pipes_spec[base].get("label", base)
-                    lines.append(
-                        f'  {dot_quote(node_id)} [shape="box", label={dot_quote(pipe_label)}];'
-                    )
-                    token_info.append({"node_id": node_id, "base": base, "port": port, "is_pipe": True})
+    for chain in connections:
+        hops = validate_connections_chain(chain, component_names, pipe_names)
+
+        token_info = []
+        for token in chain:
+            parsed = parse_connection_token(token)
+            base = parsed["base_name"]
+            port = parsed["port"]
+            instance = parsed["instance"]
+
+            if base in pipe_names:
+                node_id = f"{base}__{pipe_counter}"
+                pipe_counter += 1
+                token_info.append({"node_id": node_id, "base": base, "port": port, "is_pipe": True})
+            else:
+                if instance is None:
+                    node_id = base
+                elif instance == "":
+                    node_id = f"{base}__{anon_counter}"
+                    anon_counter += 1
                 else:
-                    token_info.append({"node_id": None, "base": base, "port": port, "is_pipe": False})
+                    node_id = f"{base}__{instance}"
+                token_info.append({"node_id": node_id, "base": base, "port": port, "is_pipe": False})
 
-            for hop_idx in range(len(hops)):
-                fi = token_info[hop_idx]
-                ti = token_info[hop_idx + 1]
-
-                if fi["is_pipe"]:
-                    tail = dot_quote(fi["node_id"])
-                else:
-                    port = fi["port"]
-                    if port is None:
-                        comp_ports = normalise_ports(diagram["components"][fi["base"]])
-                        if comp_ports:
-                            port = comp_ports[0]["name"]
-                    if port:
-                        tail = f'{dot_quote(fi["base"])}:{port}:e'
-                    else:
-                        tail = dot_quote(fi["base"])
-
+        for ti in token_info:
+            if ti["node_id"] not in emitted_nodes:
                 if ti["is_pipe"]:
-                    head = dot_quote(ti["node_id"])
+                    pipe_html = build_pipe_html_label(ti["base"], pipes_spec[ti["base"]])
+                    lines.append(
+                        f'  {dot_quote(ti["node_id"])} [shape=none, margin=0, label={pipe_html}];'
+                    )
                 else:
-                    port = ti["port"]
-                    if port is None:
-                        comp_ports = normalise_ports(diagram["components"][ti["base"]])
-                        if comp_ports:
-                            port = comp_ports[0]["name"]
-                    if port:
-                        head = f'{dot_quote(ti["base"])}:{port}:w'
-                    else:
-                        head = dot_quote(ti["base"])
+                    lines.append(render_component_node(ti["node_id"], diagram["components"][ti["base"]]))
+                emitted_nodes.add(ti["node_id"])
 
-                lines.append(f"  {tail} -> {head};")
+        for hop_idx in range(len(hops)):
+            fi = token_info[hop_idx]
+            ti = token_info[hop_idx + 1]
+
+            if fi["is_pipe"]:
+                tail = dot_quote(fi["node_id"])
+            else:
+                port = fi["port"]
+                if port is None:
+                    comp_ports = normalise_ports(diagram["components"][fi["base"]])
+                    if comp_ports:
+                        port = comp_ports[0]["name"]
+                if port:
+                    tail = f'{dot_quote(fi["node_id"])}:{port}__e:e'
+                else:
+                    tail = dot_quote(fi["node_id"])
+
+            if ti["is_pipe"]:
+                head = dot_quote(ti["node_id"])
+            else:
+                port = ti["port"]
+                if port is None:
+                    comp_ports = normalise_ports(diagram["components"][ti["base"]])
+                    if comp_ports:
+                        port = comp_ports[0]["name"]
+                if port:
+                    head = f'{dot_quote(ti["node_id"])}:{port}__w:w'
+                else:
+                    head = dot_quote(ti["node_id"])
+
+            lines.append(f"  {tail} -> {head};")
 
     lines.append("}")
     return "\n".join(lines) + "\n"
@@ -469,9 +551,8 @@ def run_graphviz(file_path, format_type, output_dir):
             shared_data.get("components", {}), diagram_data.get("components", {})
         )
 
-        local_components = diagram_data.get("components", {})
         resolved_components = {}
-        for component_name, component_spec in local_components.items():
+        for component_name, component_spec in component_library.items():
             resolved_components[component_name] = resolve_component(
                 component_name,
                 component_spec,

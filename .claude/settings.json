@@ -1,13 +1,15 @@
 {
-    "permissions": {
-        "allow": [
-            "Bash(python -m pytest *)",
-            "Bash(python3 -m pytest *)",
-            "Bash(python generate_all.py *)",
-            "Bash(python3 generate_all.py *)",
-            "Bash(source .venv/bin/activate)",
-            "Bash(source .venv/bin/activate && python -m pytest *)",
-            "Bash(source .venv/bin/activate && python3 -m pytest *)"
-        ]
-    }
+  "permissions": {
+    "allow": [
+      "Bash(python -m pytest *)",
+      "Bash(python3 -m pytest *)",
+      "Bash(python generate_all.py *)",
+      "Bash(python3 generate_all.py *)",
+      "Bash(source .venv/bin/activate)",
+      "Bash(source .venv/bin/activate && python -m pytest *)",
+      "Bash(source .venv/bin/activate && python3 -m pytest *)",
+      "Read(//Users/cal/git/pipeviz/**)",
+      "Read(//Users/cal/git/pipeviz/src/wireviz/**)"
+    ]
+  }
 }

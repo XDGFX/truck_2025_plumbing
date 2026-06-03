@@ -1,139 +1,156 @@
-diagram:
-  title: Tank System
-  rankdir: LR
-
 components:
-  camec_95l_fresh_tank:
-    template: tank
-    label: 95L FRESH WATER TANK
-    manufacturer: Camec
-    description: >
-      95L polyethylene slimline fresh water tank.
-      High side: 1-1/2" BSP DN40 female (fill), 3/4" BSP DN20 female (vent).
-      Low side: 1-1/2" BSP DN40 male (crosslink), 3/4" BSP DN20 female ×2 (outlet).
-    ports:
-      - name: HIGH_BSP40_F
-        connection_size: '1-1/2" BSP'
-        gender: F
-        service_rating: potable
-      - name: HIGH_BSP20_F
-        connection_size: '3/4" BSP'
-        gender: F
-      - name: LOW_BSP40_M
-        connection_size: '1-1/2" BSP'
-        gender: M
-        service_rating: potable
-      - name: LOW_BSP20_F_1
-        connection_size: '3/4" BSP'
-        gender: F
-        service_rating: potable
-      - name: LOW_BSP20_F_2
-        connection_size: '3/4" BSP'
-        gender: F
-        service_rating: potable
+    camec_95l_fresh_tank:
+        template: tank
+        label: 95L FRESH WATER TANK
+        manufacturer: Camec
+        description: >
+            95L polyethylene slimline fresh water tank.
+            High side: 1-1/2" BSP DN40 female (fill), 3/4" BSP DN20 female (vent).
+            Low side: 1-1/2" BSP DN40 male (crosslink), 3/4" BSP DN20 female ×2 (outlet).
+        ports:
+            - name: HIGH_BSP40_F
+              connection_size: '1-1/2" BSP'
+              gender: F
+            - name: HIGH_BSP20_F
+              connection_size: '3/4" BSP'
+              gender: F
+            - name: LOW_BSP40_M
+              connection_size: '1-1/2" BSP'
+              gender: M
+            - name: LOW_BSP20_F_1
+              connection_size: '3/4" BSP'
+              gender: F
+            - name: LOW_BSP20_F_2
+              connection_size: '3/4" BSP'
+              gender: F
 
-  tank_waste:
-    template: tank
-    label: 50L GREY WATER TANK
-    manufacturer: Camec
-    description: >
-      50L polyethylene grey water waste tank.
-      High side: 1-1/2" BSP DN40 male (inlet).
-      Low side: 1-1/2" BSP DN40 male (outlet).
-    ports:
-      - name: HIGH_BSP40_M
-        connection_size: '1-1/2" BSP'
-        gender: M
-        service_rating: waste
-      - name: LOW_BSP40_M
-        connection_size: '1-1/2" BSP'
-        gender: M
-        service_rating: waste
+    tank_waste:
+        template: tank
+        label: 50L GREY WATER TANK
+        manufacturer: Camec
+        description: >
+            50L polyethylene grey water waste tank.
+            High side: 1-1/2" BSP DN40 male (inlet).
+            Low side: 1-1/2" BSP DN40 male (outlet).
+        ports:
+            - name: HIGH_BSP40_M
+              connection_size: '1-1/2" BSP'
+              gender: M
+              service_rating: waste
+            - name: LOW_BSP40_M
+              connection_size: '1-1/2" BSP'
+              gender: M
+              service_rating: waste
 
-  filler:
-    template: fixture
-    label: GRAVITY FILLER
-    manufacturer: Camec
-    description: >
-      External deck-mounted gravity water filler.
-      25mm barbed fill port; 10mm barbed vent port.
-    ports:
-      - name: BARB_25MM
-        connection_size: 25MM BARB
-        gender: M
-      - name: BARB_10MM
-        connection_size: 10MM BARB
-        gender: M
+    filler:
+        template: fixture
+        label: GRAVITY FILLER
+        manufacturer: Camec
+        description: >
+            External deck-mounted gravity water filler.
+            25mm barbed fill port; 10mm barbed vent port.
+        ports:
+            - name: BARB_25MM
+              connection_size: 25MM BARB
+              gender: M
+            - name: BARB_10MM
+              connection_size: 10MM BARB
+              gender: M
 
 pipes:
-  hose_40mm:
-    label: '40MM FLEXIBLE HOSE'
-    size: '40mm'
-    service_rating: potable
+    hose_40mm:
+        label: "40MM FLEXIBLE HOSE"
+        size: "40mm"
+        service_rating: potable
 
-  hose_40mm_dwv:
-    label: '40MM FLEXIBLE DWV HOSE'
-    material: PVC
-    size: '40mm'
-    service_rating: waste
+    hose_40mm_dwv:
+        label: "40MM FLEXIBLE DWV HOSE"
+        material: PVC
+        size: "40mm"
+        service_rating: waste
 
-  hose_25mm:
-    label: '25MM FILL HOSE'
-    material: PVC
-    size: '25mm'
-    service_rating: potable
+    hose_25mm:
+        label: "25MM FILL HOSE"
+        material: PVC
+        size: "25mm"
+        service_rating: potable
 
-  hose_10mm:
-    label: '10MM VENT HOSE'
-    size: '10mm'
-    service_rating: vent
+    hose_10mm:
+        label: "10MM VENT HOSE"
+        size: "10mm"
+        service_rating: vent
 
-  pipe_jg_12mm:
-    label: '12MM JOHN GUEST PIPE'
-    material: LLDPE
-    size: '12mm'
-    service_rating: potable
+    pipe_jg_12mm:
+        label: "12MM JOHN GUEST PIPE"
+        material: LLDPE
+        size: "12mm"
+        service_rating: potable
 
-  hose_3_4:
-    label: '3/4" DISCHARGE HOSE'
-    size: '3/4"'
-    service_rating: waste
+    hose_3_4:
+        label: '3/4" DISCHARGE HOSE'
+        size: '3/4"'
+        service_rating: waste
 
 connections:
-  # Fill: filler → 25mm hose → 25mm tee → adapters → both tanks
-  - [filler:BARB_25MM, hose_25mm, tee_25mm_barb.fill_tee:A]
-  - [tee_25mm_barb.fill_tee:B, hose_25mm, adapter_25mm_barb_to_1_5_bsp.fill_a:BARB_25MM]
-  - [adapter_25mm_barb_to_1_5_bsp.fill_a:BSP_MALE, camec_95l_fresh_tank.a:HIGH_BSP40_F]
-  - [tee_25mm_barb.fill_tee:C, hose_25mm, adapter_25mm_barb_to_1_5_bsp.fill_b:BARB_25MM]
-  - [adapter_25mm_barb_to_1_5_bsp.fill_b:BSP_MALE, camec_95l_fresh_tank.b:HIGH_BSP40_F]
+    # Fill: filler → 25mm hose → 25mm tee → adapters → both tanks
+    - - filler:BARB_25MM
+      - hose_25mm
+      - tee_25mm_barb:A
 
-  # Vent: both tanks → 3/4" BSP adapters → 10mm tee → filler
-  - [camec_95l_fresh_tank.a:HIGH_BSP20_F, adapter_10mm_barb_to_3_4_bsp.vent_a:BSP_MALE]
-  - [adapter_10mm_barb_to_3_4_bsp.vent_a:BARB_10MM, hose_10mm, tee_10mm_barb.vent_tee:A]
-  - [camec_95l_fresh_tank.b:HIGH_BSP20_F, adapter_10mm_barb_to_3_4_bsp.vent_b:BSP_MALE]
-  - [adapter_10mm_barb_to_3_4_bsp.vent_b:BARB_10MM, hose_10mm, tee_10mm_barb.vent_tee:B]
-  - [tee_10mm_barb.vent_tee:C, hose_10mm, filler:BARB_10MM]
+    - - tee_25mm_barb:B
+      - hose_25mm
+      - adapter_25mm_barb_to_1_5_bsp.
+      - camec_95l_fresh_tank.a:HIGH_BSP40_F
 
-  # Crosslink: tank A low 1-1/2" BSP male ↔ tank B low 1-1/2" BSP male via 40mm hose + DWV adapters
-  - [camec_95l_fresh_tank.a:LOW_BSP40_M, adapter_dwv_1_5_bsp_to_40mm.xlink_a:BSP_FEMALE]
-  - [adapter_dwv_1_5_bsp_to_40mm.xlink_a:BARB_40MM, hose_40mm, adapter_dwv_1_5_bsp_to_40mm.xlink_b:BARB_40MM]
-  - [adapter_dwv_1_5_bsp_to_40mm.xlink_b:BSP_FEMALE, camec_95l_fresh_tank.b:LOW_BSP40_M]
+    - - tee_25mm_barb:C
+      - hose_25mm
+      - adapter_25mm_barb_to_1_5_bsp.
+      - camec_95l_fresh_tank.b:HIGH_BSP40_F
 
-  # Supply outlet: tank A LOW_BSP20_F_1 → JG adapter → 12mm JG pipe (supply to rest of system)
-  - [camec_95l_fresh_tank.a:LOW_BSP20_F_1, adapter_jg_12mm_to_3_4_bsp.supply:BSP_MALE]
-  - [adapter_jg_12mm_to_3_4_bsp.supply:JG_12MM, pipe_jg_12mm]
+    # Vent: both tanks → 3/4" BSP adapters → 10mm tee → filler
+    - - filler:BARB_10MM
+      - hose_10mm
+      - tee_10mm_barb:A
 
-  # Bungs: unused 3/4" BSP female low ports (tank A ×1, tank B ×2)
-  - [camec_95l_fresh_tank.a:LOW_BSP20_F_2, bung_3_4_bsp.:THREAD]
-  - [camec_95l_fresh_tank.b:LOW_BSP20_F_1, bung_3_4_bsp.:THREAD]
-  - [camec_95l_fresh_tank.b:LOW_BSP20_F_2, bung_3_4_bsp.:THREAD]
+    - - tee_10mm_barb:B
+      - hose_10mm
+      - adapter_10mm_barb_to_3_4_bsp.
+      - camec_95l_fresh_tank.a:HIGH_BSP20_F
 
-  # Waste inlet: 40mm DWV hose (from fixtures) → flex union → DWV adapter → tank high port
-  - [hose_40mm_dwv, flex_union_40mm.waste:INLET]
-  - [flex_union_40mm.waste:OUTLET, hose_40mm_dwv, adapter_dwv_1_5_bsp_to_40mm.waste_in:BARB_40MM]
-  - [adapter_dwv_1_5_bsp_to_40mm.waste_in:BSP_FEMALE, tank_waste:HIGH_BSP40_M]
+    - - tee_10mm_barb:C
+      - hose_10mm
+      - adapter_10mm_barb_to_3_4_bsp.
+      - camec_95l_fresh_tank.b:HIGH_BSP20_F
 
-  # Waste outlet: tank low port → reducer (TBD) → solenoid valve → discharge hose
-  - [tank_waste:LOW_BSP40_M, reducer_1_5_bsp_to_3_4_bsp.waste_out:INLET]
-  - [reducer_1_5_bsp_to_3_4_bsp.waste_out:OUTLET, solenoid_valve_3_4.waste_out:INLET]
-  - [solenoid_valve_3_4.waste_out:OUTLET, hose_3_4]
+    # Crosslink: tank A low 1-1/2" BSP male ↔ tank B low 1-1/2" BSP male via 40mm hose + DWV adapters
+    # hose_40mm^ reverses direction: hose connects right-side of both adapters (U-turn)
+    - - camec_95l_fresh_tank.a:LOW_BSP40_M
+      - adapter_dwv_1_5_bsp_to_40mm.
+      - hose_40mm^
+      - adapter_dwv_1_5_bsp_to_40mm.
+      - camec_95l_fresh_tank.b:LOW_BSP40_M
+
+    # Supply outlet: tank A LOW_BSP20_F_1 → JG adapter → 12mm JG pipe (supply to rest of system)
+    - - camec_95l_fresh_tank.a:LOW_BSP20_F_1
+      - adapter_jg_12mm_to_3_4_bsp.
+      - pipe_jg_12mm
+
+    # Bungs: unused 3/4" BSP female low ports (tank A ×1, tank B ×2)
+    - - camec_95l_fresh_tank.a:LOW_BSP20_F_2
+      - bung_3_4_bsp.
+
+    - - camec_95l_fresh_tank.b:LOW_BSP20_F_1
+      - bung_3_4_bsp.
+
+    - - camec_95l_fresh_tank.b:LOW_BSP20_F_2
+      - bung_3_4_bsp.
+
+    # Waste inlet: 40mm DWV hose (from fixtures) → flex union → DWV adapter → tank high port
+    # - [hose_40mm_dwv, flex_union_40mm.waste:INLET]
+    # - [flex_union_40mm.waste:OUTLET, hose_40mm_dwv, adapter_dwv_1_5_bsp_to_40mm.waste_in:BARB_40MM]
+    # - [adapter_dwv_1_5_bsp_to_40mm.waste_in, tank_waste:HIGH_BSP40_M]
+
+    # # Waste outlet: tank low port → reducer (TBD) → solenoid valve → discharge hose
+    # - [tank_waste:LOW_BSP40_M, reducer_1_5_bsp_to_3_4_bsp.waste_out:INLET]
+    # - [reducer_1_5_bsp_to_3_4_bsp.waste_out:OUTLET, solenoid_valve_3_4.waste_out:INLET]
+    # - [solenoid_valve_3_4.waste_out:OUTLET, hose_3_4]

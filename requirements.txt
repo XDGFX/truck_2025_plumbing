@@ -1,1 +1,1 @@
-PyYAML>=6.0
+pipeviz @ git+https://github.com/xdgfx/pipeviz.git

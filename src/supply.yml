@@ -1,0 +1,64 @@
+components:
+    from_tanks:
+        template: offpage
+        label: FROM FRESH WATER TANKS
+        simple: true
+
+    to_supply:
+        template: offpage
+        label: TO HOT/COLD SUPPLY
+        simple: true
+
+    strainer_shurflo:
+        template: filter
+        label: SHURFLO TWIST-ON STRAINER
+        manufacturer: Shurflo
+        description: 'Inline twist-on strainer — 1/2" BSP female inlet, 1/2" BSP male outlet'
+        simple: true
+
+    shurflo_4009:
+        template: pump
+        label: SHURFLO 4009 PUMP
+        manufacturer: Shurflo
+        model: "4009"
+        description: '24V DC self-priming diaphragm pump, 1/2" BSP ports'
+        ports:
+            - name: INLET
+              connection_size: '1/2" BSP'
+              gender: M
+            - name: OUTLET
+              connection_size: '1/2" BSP'
+              gender: M
+
+    accumulator:
+        template: tank
+        label: SEAFLO 0.75L ACCUMULATOR
+        manufacturer: Seaflo
+        model: SFAT-075-125-01
+        description: >
+            0.75L pressure accumulator tank — 1/2" NPT male both sides.
+            Ports connected via 1/2" BSP adapters with PTFE tape (NPT/BSP cross-thread).
+        simple: true
+
+pipes:
+    pipe_pex_16mm:
+        label: "16MM PEX PIPE"
+        material: PEX
+        size: "16mm"
+        service_rating: potable
+
+connections:
+    # Tank supply → strainer → pump inlet
+    - - from_tanks
+      - pipe_pex_16mm
+      - adapter_pex_16mm_to_1_2_bsp.
+      - strainer_shurflo.
+      - shurflo_4009:INLET
+
+    # Pump outlet → accumulator → supply
+    - - shurflo_4009:OUTLET
+      - adapter_pex_16mm_to_1_2_bsp.
+      - pipe_pex_16mm
+      - adapter_pex_16mm_to_1_2_bsp.
+      - accumulator
+      - to_supply

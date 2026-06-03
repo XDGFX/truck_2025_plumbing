@@ -37,6 +37,29 @@ you do not need shared definitions.
 
 All colour fields (`fillcolor`, `color`, `bgcolor`) accept 2-letter WireViz colour codes as well as hex strings. For example, `fillcolor: RD` is equivalent to `fillcolor: "#ff0000"`. See [SYNTAX.md](SYNTAX.md#named-colours) for the full palette.
 
+## Configuration
+
+Project-level settings live in `config.py`:
+
+| Constant | Purpose |
+|----------|---------|
+| `PLUMBING_FILE_PATTERN` | Glob for diagram source files |
+| `SHARED_COMPONENTS_FILE` | Path to the optional prepend file |
+| `GRAPHVIZ_COMMAND` | `dot` binary name or path |
+| `GRAPHVIZ_FONT` | Default font for all nodes and edges |
+| `GRAPHVIZ_DEFAULTS` | Default `rankdir`, `splines`, and `bgcolor` |
+| `DEFAULT_FORMAT` | Output format when `--format` is not passed |
+| `DEFAULT_OUTPUT_DIR` | Output directory when `--output-dir` is not passed |
+| `SERVICE_COLORS` | Maps service rating names to `(fill, border)` colour pairs |
+
+To add a custom service rating (e.g. `fuel`), add an entry to `SERVICE_COLORS` in `config.py`:
+
+```python
+SERVICE_COLORS["fuel"] = ("YE", "OG")  # yellow fill, orange border
+```
+
+Any name is accepted — it just needs to appear in `SERVICE_COLORS` for automatic styling to apply.
+
 ## Requirements
 
 - Python packages: install `PyYAML`

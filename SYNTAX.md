@@ -28,7 +28,8 @@ pipes:
     # optional pipe metadata:
     material: PEX-B
     size: '1/2"'
-    service_rating: potable    # potable · waste · vent · hot — sets pipe colour automatically
+    colour: BU                 # explicit edge colour (WireViz 2-letter code or hex); overrides service_rating
+    service_rating: potable    # potable · waste · vent · hot — sets edge colour automatically
     description: Cold supply run
 
 connections:
@@ -120,16 +121,24 @@ pipes:
 
 Each use of a pipe name in a `connections` chain creates a fresh unnamed pipe run — the same name can appear in multiple chains without conflict.
 
-### Service colours
+### Pipe edge styling
 
-Setting `service_rating` on a pipe automatically applies a fill and border colour:
+Edges connecting a pipe node to a component are styled to visually represent the hose:
 
-| `service_rating` | Fill | Border |
-|-----------------|------|--------|
+- **`colour`** (or `color`) — explicit edge colour as a WireViz 2-letter code (e.g. `BU`) or hex string. Takes priority over `service_rating`.
+- **`service_rating`** — if no explicit colour is set, the vivid border colour for that service is used on edges (see table below).
+- **`size`** — drives `penwidth` on edges proportional to the pipe diameter (25 mm ≈ 3 pt; 40 mm ≈ 5 pt; 10 mm ≈ 1 pt). Accepts `mm` or inch units (`in`, `"`, `inch`).
+
+Setting `service_rating` on a pipe also applies a fill and border colour to the pipe node itself.
+The built-in services are defined in `config.py` — add entries to `SERVICE_COLORS` there to support any custom service name:
+
+| `service_rating` | Node fill | Node border / Edge colour |
+| ---------------- | --------- | ------------------------- |
 | `potable` | `LB` (light blue) | `BU` (blue) |
 | `waste` | `PK` (pink) | `RD` (red) |
 | `vent` | `GN` (green) | `OL` (olive) |
 | `hot` | `GD` (gold) | `OG` (orange) |
+| *(custom)* | *(any 2-letter code or hex)* | *(any 2-letter code or hex)* |
 
 ---
 
@@ -146,6 +155,7 @@ Setting `service_rating` on a pipe automatically applies a fill and border colou
 | `component.name:port` | Named instance, specific port |
 | `component.:port` | Unnamed instance — fresh occurrence each time |
 | `pipe_type` | Creates a unique unnamed pipe run |
+| `pipe_type^` | Reversed pipe run — the outgoing edge connects to the **right (east)** side of the next component instead of the left, and all subsequent hops in the chain flip direction. Use for U-turn / loopback connections. Adds `constraint=false` to reversed edges so they don't disturb the rank layout. |
 
 ### Rules
 

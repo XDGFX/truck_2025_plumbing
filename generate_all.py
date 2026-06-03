@@ -20,7 +20,12 @@ import config
 
 
 def parse_connection_token(token: str) -> dict:
-    """Parse a connection chain token into base_name, instance, and port components."""
+    """Parse a connection chain token into base_name, instance, and port components.
+
+    A trailing ``^`` on the name part marks a pipe as a reversal point — the
+    outgoing edge and all subsequent hops in the chain flip direction (L↔R).
+    ``^`` is stripped before further parsing; it only has effect on pipe tokens.
+    """
     if not token:
         raise ValueError("Connection token must not be empty")
 
@@ -30,14 +35,22 @@ def parse_connection_token(token: str) -> dict:
 
     if port_part is not None:
         if port_part.startswith("[") or "," in port_part:
-            raise ValueError("Multi-port list syntax is invalid; at most one port per token")
+            raise ValueError(
+                "Multi-port list syntax is invalid; at most one port per token"
+            )
         if re.search(r"^\d+-\d+$", port_part):
-            raise ValueError("Multi-port range syntax is invalid; at most one port per token")
+            raise ValueError(
+                "Multi-port range syntax is invalid; at most one port per token"
+            )
+
+    reversed_marker = name_part.endswith("^")
+    if reversed_marker:
+        name_part = name_part[:-1]
 
     if "." in name_part:
         dot_idx = name_part.index(".")
         base_name = name_part[:dot_idx]
-        instance = name_part[dot_idx + 1:]
+        instance = name_part[dot_idx + 1 :]
     else:
         base_name = name_part
         instance = None
@@ -45,7 +58,12 @@ def parse_connection_token(token: str) -> dict:
     if not base_name:
         raise ValueError("Connection token must have a non-empty base name")
 
-    return {"base_name": base_name, "instance": instance, "port": port_part}
+    return {
+        "base_name": base_name,
+        "instance": instance,
+        "port": port_part,
+        "reversed": reversed_marker,
+    }
 
 
 def validate_connections_chain(
@@ -82,7 +100,14 @@ def validate_connections_chain(
                 f"Pipe-to-pipe adjacent hops are invalid: "
                 f"'{from_parsed['base_name']}' -> '{to_parsed['base_name']}'"
             )
-        hops.append({"from": from_parsed, "to": to_parsed, "from_kind": from_kind, "to_kind": to_kind})
+        hops.append(
+            {
+                "from": from_parsed,
+                "to": to_parsed,
+                "from_kind": from_kind,
+                "to_kind": to_kind,
+            }
+        )
 
     return hops
 
@@ -224,12 +249,57 @@ def resolve_color(value: str) -> str:
     return value
 
 
-_SERVICE_COLORS = {
-    "potable": ("LB", "BU"),   # light blue fill, blue border
-    "waste":   ("PK", "RD"),   # pink fill, red border
-    "vent":    ("GN", "OL"),   # green fill, olive border
-    "hot":     ("GD", "OG"),   # gold fill, orange border
-}
+import re as _re
+
+
+def parse_size_mm(size: str | None) -> float | None:
+    """Parse a size string to millimetres. Returns None if not parseable."""
+    if size is None:
+        return None
+    s = str(size).strip()
+    m = _re.match(r"^([0-9]+(?:\.[0-9]+)?)\s*mm$", s, _re.IGNORECASE)
+    if m:
+        return float(m.group(1))
+    m = _re.match(r'^([0-9]+(?:\.[0-9]+)?)\s*(?:in|inch|inches|")', s, _re.IGNORECASE)
+    if m:
+        return float(m.group(1)) * 25.4
+    return None
+
+
+def penwidth_from_mm(mm: float) -> float:
+    """Map a pipe diameter in mm to a Graphviz penwidth, clamped to [1.0, 32.0]."""
+    return max(1.0, min(32.0, mm / 3.0))
+
+
+def _pipe_edge_attrs(pipe_spec: dict, extra_attrs: dict | None = None) -> str:
+    """Return a DOT attribute string for edges adjacent to a pipe node.
+
+    Handles colour (explicit > service_rating) and penwidth (from size).
+    ``extra_attrs`` are merged in last, so callers can inject e.g. ``constraint``.
+    Returns empty string if no styling applies.
+    """
+    attrs = {}
+
+    raw_colour = pipe_spec.get("colour") or pipe_spec.get("color")
+    if raw_colour:
+        attrs["color"] = resolve_color(str(raw_colour))
+    else:
+        service = pipe_spec.get("service_rating", "")
+        if service in config.SERVICE_COLORS:
+            _, border_code = config.SERVICE_COLORS[service]
+            attrs["color"] = resolve_color(border_code)
+
+    size_mm = parse_size_mm(pipe_spec.get("size"))
+    if size_mm is not None:
+        attrs["penwidth"] = f"{penwidth_from_mm(size_mm):.2f}"
+
+    if extra_attrs:
+        attrs.update(extra_attrs)
+
+    if not attrs:
+        return ""
+    parts = ", ".join(f'{k}="{v}"' for k, v in attrs.items())
+    return f"[{parts}]"
 
 
 def build_html_label(node_id, component_spec):
@@ -267,11 +337,11 @@ def build_html_label(node_id, component_spec):
         size_text = escape(str(port.get("connection_size", "")))
         gender_text = escape(str(port.get("gender", "")))
         rows.append(
-            f'<TR>'
+            f"<TR>"
             f'<TD PORT="{escape(port_name)}__w" BORDER="1" ALIGN="CENTER">{escape(port_name)}</TD>'
             f'<TD BORDER="1" ALIGN="CENTER">{size_text}</TD>'
             f'<TD PORT="{escape(port_name)}__e" BORDER="1" ALIGN="CENTER">{gender_text}</TD>'
-            f'</TR>'
+            f"</TR>"
         )
 
     # Description at bottom (collapsed + truncated)
@@ -282,14 +352,14 @@ def build_html_label(node_id, component_spec):
             desc_clean = desc_clean[:77] + "..."
         rows.append(
             f'<TR><TD COLSPAN="{ncols}" BORDER="1" ALIGN="CENTER">'
-            f'{escape(desc_clean)}</TD></TR>'
+            f"{escape(desc_clean)}</TD></TR>"
         )
 
     rows_html = "\n".join(f"  {r}" for r in rows)
     return (
         '<<TABLE BORDER="0" CELLSPACING="0" CELLPADDING="3">\n'
-        f'{rows_html}\n'
-        '</TABLE>>'
+        f"{rows_html}\n"
+        "</TABLE>>"
     )
 
 
@@ -297,13 +367,13 @@ def build_pipe_html_label(pipe_name, pipe_spec):
     """Build a Graphviz HTML label for a pipe segment."""
     label = escape(str(pipe_spec.get("label", pipe_name)))
     service = pipe_spec.get("service_rating", "")
-    raw_fill, raw_border = _SERVICE_COLORS.get(service, ("#f1f5f9", "#64748b"))
+    raw_fill, raw_border = config.SERVICE_COLORS.get(service, ("#f1f5f9", "#64748b"))
     fill_color, border_color = resolve_color(raw_fill), resolve_color(raw_border)
 
     rows = []
     rows.append(
         f'<TR><TD BORDER="1" BGCOLOR="{fill_color}" COLOR="{border_color}" ALIGN="CENTER">'
-        f'{label}</TD></TR>'
+        f"{label}</TD></TR>"
     )
 
     meta_parts = []
@@ -321,8 +391,8 @@ def build_pipe_html_label(pipe_name, pipe_spec):
     rows_html = "\n".join(f"  {r}" for r in rows)
     return (
         '<<TABLE BORDER="0" CELLSPACING="0" CELLPADDING="0">\n'
-        f'{rows_html}\n'
-        '</TABLE>>'
+        f"{rows_html}\n"
+        "</TABLE>>"
     )
 
 
@@ -434,7 +504,9 @@ def build_dot(diagram, file_path):
     title = graph_defaults.get("title", Path(file_path).stem.replace("_", " ").title())
     rankdir = graph_defaults.get("rankdir", config.GRAPHVIZ_DEFAULTS["rankdir"])
     splines = graph_defaults.get("splines", config.GRAPHVIZ_DEFAULTS["splines"])
-    bgcolor = resolve_color(graph_defaults.get("bgcolor", config.GRAPHVIZ_DEFAULTS["bgcolor"]))
+    bgcolor = resolve_color(
+        graph_defaults.get("bgcolor", config.GRAPHVIZ_DEFAULTS["bgcolor"])
+    )
     ranksep = graph_defaults.get("ranksep", "2")
     nodesep = graph_defaults.get("nodesep", "0.33")
     fontname = graph_defaults.get("fontname", config.GRAPHVIZ_FONT)
@@ -447,7 +519,7 @@ def build_dot(diagram, file_path):
     lines.append(
         f'  node [fillcolor="#FFFFFF" fontname={dot_quote(fontname)} height=0 margin=0 shape=none style=filled width=0];'
     )
-    lines.append(f"  edge [fontname={dot_quote(fontname)}, style=bold, dir=none];");
+    lines.append(f"  edge [fontname={dot_quote(fontname)}, style=bold, dir=none];")
     lines.append('  labelloc="t";')
     lines.append(f"  label={dot_quote(title)};")
     lines.append("  fontsize=20;")
@@ -480,7 +552,15 @@ def build_dot(diagram, file_path):
             if base in pipe_names:
                 node_id = f"{base}__{pipe_counter}"
                 pipe_counter += 1
-                token_info.append({"node_id": node_id, "base": base, "port": port, "is_pipe": True})
+                token_info.append(
+                    {
+                        "node_id": node_id,
+                        "base": base,
+                        "port": port,
+                        "is_pipe": True,
+                        "flip_after": parsed["reversed"],
+                    }
+                )
             else:
                 if instance is None:
                     node_id = base
@@ -489,54 +569,110 @@ def build_dot(diagram, file_path):
                     anon_counter += 1
                 else:
                     node_id = f"{base}__{instance}"
-                token_info.append({"node_id": node_id, "base": base, "port": port, "is_pipe": False})
+                token_info.append(
+                    {
+                        "node_id": node_id,
+                        "base": base,
+                        "port": port,
+                        "is_pipe": False,
+                        "flip_after": False,
+                    }
+                )
 
         for ti in token_info:
             if ti["node_id"] not in emitted_nodes:
                 if ti["is_pipe"]:
-                    pipe_html = build_pipe_html_label(ti["base"], pipes_spec[ti["base"]])
+                    pipe_html = build_pipe_html_label(
+                        ti["base"], pipes_spec[ti["base"]]
+                    )
                     lines.append(
                         f'  {dot_quote(ti["node_id"])} [shape=none, margin=0, label={pipe_html}];'
                     )
                 else:
-                    lines.append(render_component_node(ti["node_id"], diagram["components"][ti["base"]]))
+                    lines.append(
+                        render_component_node(
+                            ti["node_id"], diagram["components"][ti["base"]]
+                        )
+                    )
                 emitted_nodes.add(ti["node_id"])
 
+        reversed_state = False
         for hop_idx in range(len(hops)):
             fi = token_info[hop_idx]
             ti = token_info[hop_idx + 1]
 
+            # The ^ on a pipe flips direction starting from its outgoing edge.
+            # Tail uses pre-flip state; head and all subsequent hops use post-flip state.
+            at_flip = fi["is_pipe"] and fi.get("flip_after", False)
+            pre_flip = reversed_state
+            if at_flip:
+                reversed_state = True
+                if (
+                    hop_idx >= 1
+                    and not token_info[hop_idx - 1]["is_pipe"]
+                    and not ti["is_pipe"]
+                ):
+                    prev_id = dot_quote(token_info[hop_idx - 1]["node_id"])
+                    next_id = dot_quote(ti["node_id"])
+                    lines.append(f"  {{rank=same; {prev_id}; {next_id}}}")
+            post_flip = reversed_state
+
             if fi["is_pipe"]:
-                tail = dot_quote(fi["node_id"])
+                # Flip pipe exits from south (:s) for n/s symmetry; reversed pipes
+                # exit from west; all others from east.
+                if at_flip:
+                    tail = f'{dot_quote(fi["node_id"])}:s'
+                elif pre_flip:
+                    tail = f'{dot_quote(fi["node_id"])}:w'
+                else:
+                    tail = f'{dot_quote(fi["node_id"])}:e'
             else:
                 port = fi["port"]
                 if port is None:
                     comp_ports = normalise_ports(diagram["components"][fi["base"]])
                     if comp_ports:
                         port = comp_ports[0]["name"]
+                side = "w" if pre_flip else "e"
                 if port:
-                    tail = f'{dot_quote(fi["node_id"])}:{port}__e:e'
+                    tail = f'{dot_quote(fi["node_id"])}:{port}__{side}:{side}'
                 elif diagram["components"][fi["base"]].get("simple"):
-                    tail = f'{dot_quote(fi["node_id"])}:e'
+                    tail = f'{dot_quote(fi["node_id"])}:{side}'
                 else:
                     tail = dot_quote(fi["node_id"])
 
             if ti["is_pipe"]:
-                head = dot_quote(ti["node_id"])
+                # Incoming edge to a flip pipe enters from north (:n) for n/s symmetry.
+                if ti.get("flip_after", False):
+                    head = f'{dot_quote(ti["node_id"])}:n'
+                elif post_flip:
+                    head = f'{dot_quote(ti["node_id"])}:e'
+                else:
+                    head = f'{dot_quote(ti["node_id"])}:w'
             else:
                 port = ti["port"]
                 if port is None:
                     comp_ports = normalise_ports(diagram["components"][ti["base"]])
                     if comp_ports:
                         port = comp_ports[0]["name"]
+                side = "e" if post_flip else "w"
                 if port:
-                    head = f'{dot_quote(ti["node_id"])}:{port}__w:w'
+                    head = f'{dot_quote(ti["node_id"])}:{port}__{side}:{side}'
                 elif diagram["components"][ti["base"]].get("simple"):
-                    head = f'{dot_quote(ti["node_id"])}:w'
+                    head = f'{dot_quote(ti["node_id"])}:{side}'
                 else:
                     head = dot_quote(ti["node_id"])
 
-            lines.append(f"  {tail} -> {head};")
+            pipe_base = (
+                fi["base"] if fi["is_pipe"] else (ti["base"] if ti["is_pipe"] else None)
+            )
+            extra = {"constraint": "false"} if post_flip else None
+            edge_attrs = (
+                _pipe_edge_attrs(pipes_spec[pipe_base], extra)
+                if pipe_base
+                else ('[constraint="false"]' if extra else "")
+            )
+            suffix = f" {edge_attrs}" if edge_attrs else ""
+            lines.append(f"  {tail} -> {head}{suffix};")
 
     lines.append("}")
     return "\n".join(lines) + "\n"
@@ -604,7 +740,9 @@ def run_graphviz(file_path, format_type, output_dir):
         os.makedirs(output_dir, exist_ok=True)
 
         prepend_path = config.SHARED_COMPONENTS_FILE
-        shared_data = load_yaml_file(prepend_path) if os.path.exists(prepend_path) else {}
+        shared_data = (
+            load_yaml_file(prepend_path) if os.path.exists(prepend_path) else {}
+        )
         diagram_data = load_yaml_file(file_path)
 
         diagram = {

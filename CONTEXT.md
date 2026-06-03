@@ -43,7 +43,15 @@ Both port formats are accepted: string list and object list. Inputs are normalis
 Connection size and service ratings are modeled at port level, not top-level component metadata.
 
 ## Pipe Optional Metadata
-Pipe metadata such as material, size, length, service rating, description, notes, sourcing, and insulation is optional.
+Pipe metadata such as material, size, length, service rating, colour, description, notes, sourcing, and insulation is optional.
+
+## Pipe Edge Styling
+
+Edges flanking a pipe node are styled to visually represent the hose. `colour` (or `color`) sets the edge colour explicitly; `service_rating` derives it from `config.SERVICE_COLORS` when no explicit colour is given. `size` drives `penwidth` proportional to the diameter in mm (clamped to 1–32 pt). Both `mm` and inch units are accepted for `size`.
+
+## Service Colours Configuration
+
+Service rating colours are defined in `config.py` under `SERVICE_COLORS` as `(fill_code, border_code)` tuples using WireViz 2-letter codes. Any service name is valid — add entries to `SERVICE_COLORS` to support custom ratings beyond the built-in four (potable, waste, vent, hot). An unknown `service_rating` not present in `SERVICE_COLORS` renders with the default grey styling.
 
 ## Prepend File
 

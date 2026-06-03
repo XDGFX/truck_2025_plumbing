@@ -87,30 +87,18 @@ components:
         template: fitting
         label: 'DWV ADAPTER 1-1/2" BSP FEMALE → 40MM BARB'
         description: 'DWV reducer fitting — 1-1/2" BSP female socket to 40mm barbed spigot'
-        ports:
-            - name: BSP_FEMALE
-              connection_size: '1-1/2" BSP'
-              gender: F
-            - name: BARB_40MM
-              connection_size: 40MM BARB
-              gender: M
+        simple: true
 
     adapter_25mm_barb_to_1_5_bsp:
         template: fitting
         label: '25MM BARB → 1-1/2" BSP MALE ADAPTER'
         description: '25mm barbed inlet to 1-1/2" BSP male threaded outlet'
-        ports:
-            - name: BARB_25MM
-              connection_size: 25MM BARB
-              gender: M
-            - name: BSP_MALE
-              connection_size: '1-1/2" BSP'
-              gender: M
+        simple: true
 
     tee_25mm_barb:
         template: fitting
-        label: '25MM BARB TEE'
-        description: 'Equal tee — three 25mm barbed ports'
+        label: "25MM BARB TEE"
+        description: "Equal tee — three 25mm barbed ports"
         ports:
             - name: A
               connection_size: 25MM BARB
@@ -126,18 +114,12 @@ components:
         template: fitting
         label: '10MM BARB → 3/4" BSP MALE ADAPTER'
         description: '10mm barbed inlet to 3/4" BSP male threaded outlet'
-        ports:
-            - name: BARB_10MM
-              connection_size: 10MM BARB
-              gender: M
-            - name: BSP_MALE
-              connection_size: '3/4" BSP'
-              gender: M
+        simple: true
 
     tee_10mm_barb:
         template: fitting
-        label: '10MM BARB TEE'
-        description: 'Equal tee — three 10mm barbed ports'
+        label: "10MM BARB TEE"
+        description: "Equal tee — three 10mm barbed ports"
         ports:
             - name: A
               connection_size: 10MM BARB
@@ -154,53 +136,29 @@ components:
         label: '12MM JOHN GUEST → 3/4" BSP MALE ADAPTER'
         description: 'John Guest 12mm push-fit to 3/4" BSP male thread'
         manufacturer: John Guest
-        ports:
-            - name: JG_12MM
-              connection_size: 12MM JG
-              gender: F
-            - name: BSP_MALE
-              connection_size: '3/4" BSP'
-              gender: M
+        simple: true
 
     bung_3_4_bsp:
         template: fitting
         label: '3/4" BSP MALE BUNG'
         description: '3/4" BSP male plug for blanking unused tank ports'
-        ports:
-            - name: THREAD
-              connection_size: '3/4" BSP'
-              gender: M
+        simple: true
 
     flex_union_40mm:
         template: fitting
-        label: '40MM FLEXIBLE UNION'
-        description: 'Flexible disconnect union for 40mm DWV pipe; allows tank removal without disturbing fixed pipework'
-        ports:
-            - name: INLET
-              connection_size: 40MM
-            - name: OUTLET
-              connection_size: 40MM
+        label: "40MM FLEXIBLE UNION"
+        description: "Flexible disconnect union for 40mm DWV pipe; allows tank removal without disturbing fixed pipework"
+        simple: true
 
     reducer_1_5_bsp_to_3_4_bsp:
         template: fitting
         label: '1-1/2" TO 3/4" BSP REDUCER'
         description: 'Reducing adapter — 1-1/2" BSP female inlet to 3/4" BSP outlet. Exact fitting TBD.'
-        notes: 'Fitting type and sourcing TBD'
-        ports:
-            - name: INLET
-              connection_size: '1-1/2" BSP'
-              gender: F
-            - name: OUTLET
-              connection_size: '3/4" BSP'
+        notes: "Fitting type and sourcing TBD"
+        simple: true
 
     solenoid_valve_3_4:
         template: valve
         label: '3/4" SOLENOID VALVE'
         description: 'Normally-closed 12V DC solenoid valve, 3/4" BSP male threaded ports'
-        ports:
-            - name: INLET
-              connection_size: '3/4" BSP'
-              gender: M
-            - name: OUTLET
-              connection_size: '3/4" BSP'
-              gender: M
+        simple: true

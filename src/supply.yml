@@ -4,11 +4,6 @@ components:
         label: FROM FRESH WATER TANKS
         simple: true
 
-    to_supply:
-        template: offpage
-        label: TO HOT/COLD SUPPLY
-        simple: true
-
     strainer_shurflo:
         template: filter
         label: SHURFLO TWIST-ON STRAINER
@@ -40,6 +35,82 @@ components:
             Ports connected via 1/2" BSP adapters with PTFE tape (NPT/BSP cross-thread).
         simple: true
 
+    heat_exchanger:
+        template: heater
+        label: HOT WATER HEAT EXCHANGER
+        description: >
+            Plate heat exchanger — all ports 1/2" BSP female.
+            Water side: inlet (cold) and outlet (hot).
+            Coolant side: inlet and outlet (not yet connected).
+        ports:
+            - name: WATER_IN
+              connection_size: '1/2" BSP'
+              gender: F
+              service_rating: potable
+            - name: WATER_OUT
+              connection_size: '1/2" BSP'
+              gender: F
+              service_rating: hot
+            - name: COOLANT_IN
+              connection_size: '1/2" BSP'
+              gender: F
+            - name: COOLANT_OUT
+              connection_size: '1/2" BSP'
+              gender: F
+
+    kitchen_tap:
+        template: fixture
+        label: KITCHEN TAP
+        ports:
+            - name: COLD_IN
+              service_rating: potable
+            - name: HOT_IN
+              service_rating: hot
+
+    filtered_tap_kit:
+        template: filter
+        label: FILTERED TAP KIT
+        description: >
+            Self-contained bench-top filter kit with integrated tee shutoff.
+            Taps into cold supply; pass-through to kitchen tap cold inlet.
+        ports:
+            - name: SUPPLY_IN
+              service_rating: potable
+
+    lugged_elbow_outdoor:
+        template: fitting
+        label: '1/2" MALE LUGGED ELBOW'
+        description: '1/2" BSP male lugged wall elbow'
+        simple: true
+
+    ball_valve_outdoor:
+        template: valve
+        label: '1/2" BALL VALVE (F-F)'
+        description: '1/2" BSP female-female full-bore ball valve'
+        simple: true
+
+    tap_connector_outdoor:
+        template: fitting
+        label: '1/2" TAP CONNECTOR'
+        description: '1/2" BSP to outdoor tap connection fitting'
+        simple: true
+
+    outdoor_tap:
+        template: fixture
+        label: OUTDOOR TAP
+        simple: true
+
+    solenoid_valve_shower:
+        template: valve
+        label: '1/2" SOLENOID VALVE (M-M)'
+        description: 'Normally-closed solenoid valve, 1/2" BSP male both sides — shower fill control'
+        simple: true
+
+    shower_fill:
+        template: fixture
+        label: SHOWER SYSTEM FILL
+        simple: true
+
 pipes:
     pipe_pex_16mm:
         label: "16MM PEX PIPE"
@@ -47,18 +118,73 @@ pipes:
         size: "16mm"
         service_rating: potable
 
+    pipe_pex_16mm_hot:
+        label: "16MM PEX PIPE (HOT)"
+        material: PEX
+        size: "16mm"
+        service_rating: hot
+
 connections:
-    # Tank supply → strainer → pump inlet
+    # Tank supply → strainer → pump
     - - from_tanks
       - pipe_pex_16mm
       - adapter_pex_16mm_to_1_2_bsp.
       - strainer_shurflo.
       - shurflo_4009:INLET
 
-    # Pump outlet → accumulator → supply
+    # Pump → accumulator → distribution tee 1
     - - shurflo_4009:OUTLET
       - adapter_pex_16mm_to_1_2_bsp.
       - pipe_pex_16mm
       - adapter_pex_16mm_to_1_2_bsp.
       - accumulator
-      - to_supply
+      - pipe_pex_16mm
+      - tee_pex_16mm.t1:A
+
+    # Tee 1 branch: kitchen tap cold
+    - - tee_pex_16mm.t1:B
+      - pipe_pex_16mm
+      - adapter_pex_16mm_to_1_2_bsp.
+      - kitchen_tap:COLD_IN
+
+    # Tee 1 branch: filtered tap kit
+    - - filtered_tap_kit:SUPPLY_IN
+      - kitchen_tap:COLD_IN
+
+    # Tee 1 run: → tee 2
+    - - tee_pex_16mm.t1:C
+      - pipe_pex_16mm
+      - tee_pex_16mm.t2:A
+
+    # Tee 2 branch: heat exchanger → kitchen hot
+    - - tee_pex_16mm.t2:B
+      - pipe_pex_16mm
+      - adapter_pex_16mm_to_1_2_bsp.
+      - heat_exchanger:WATER_IN
+
+    - - kitchen_tap:HOT_IN
+      - adapter_pex_16mm_to_1_2_bsp.
+      - pipe_pex_16mm_hot
+      - adapter_pex_16mm_to_1_2_bsp.
+      - heat_exchanger:WATER_OUT
+
+    # Tee 2 run: → tee 3
+    - - tee_pex_16mm.t2:C
+      - pipe_pex_16mm
+      - tee_pex_16mm.t3:A
+
+    # Tee 3 branch: outdoor tap
+    - - tee_pex_16mm.t3:B
+      - pipe_pex_16mm
+      - adapter_pex_16mm_to_1_2_bsp.
+      - lugged_elbow_outdoor.
+      - ball_valve_outdoor.
+      - tap_connector_outdoor.
+      - outdoor_tap
+
+    # Tee 3 run: shower fill
+    - - tee_pex_16mm.t3:C
+      - pipe_pex_16mm
+      - adapter_pex_16mm_to_1_2_bsp.
+      - solenoid_valve_shower
+      - shower_fill

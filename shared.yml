@@ -166,11 +166,23 @@ components:
     adapter_pex_16mm_to_3_4_bsp:
         template: fitting
         label: '16MM PEX → 3/4" BSP MALE ADAPTER'
-        description: '16mm push-fit PEX inlet to 3/4" BSP male threaded outlet'
         simple: true
 
     adapter_pex_16mm_to_1_2_bsp:
         template: fitting
         label: '16MM PEX → 1/2" BSP MALE ADAPTER'
-        description: '16mm push-fit PEX inlet to 1/2" BSP male threaded outlet'
         simple: true
+
+    tee_pex_16mm:
+        template: fitting
+        label: "16MM PEX TEE"
+        ports:
+            - name: A
+              connection_size: 16MM PEX
+              gender: F
+            - name: B
+              connection_size: 16MM PEX
+              gender: F
+            - name: C
+              connection_size: 16MM PEX
+              gender: F

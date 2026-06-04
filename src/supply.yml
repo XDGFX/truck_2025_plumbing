@@ -158,5 +158,5 @@ connections:
     - - tee_pex_16mm.t3:C
       - pipe_pex_16mm
       - adapter_pex_16mm_to_1_2_bsp.
-      - solenoid_valve_shower
+      - solenoid_valve_1_2
       - shower_fill

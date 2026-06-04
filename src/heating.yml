@@ -1,0 +1,107 @@
+components:
+    coolant_tank_8l:
+        template: tank
+        label: 8L STAINLESS COOLANT TANK
+        description: >
+            8L stainless steel coolant expansion/header tank.
+            Four 19mm hose barb ports: HIGH and LOW for distribution circuit;
+            HIGH_HEATER and LOW_HEATER for diesel heater loop.
+        ports:
+            - name: HIGH
+              connection_size: 19MM BARB
+              gender: M
+            - name: HIGH_HEATER
+              connection_size: 19MM BARB
+              gender: M
+            - name: LOW
+              connection_size: 19MM BARB
+              gender: M
+            - name: LOW_HEATER
+              connection_size: 19MM BARB
+              gender: M
+
+    diesel_heater_10kw:
+        template: heater
+        label: 10KW DIESEL HEATER
+        description: >
+            10kW diesel-fired coolant heater with built-in pump.
+            Coolant port type/size TBD — assumed 19mm (3/4") barb for now.
+        ports:
+            - name: COOLANT_OUT
+              connection_size: UNKNOWN
+              gender: F
+            - name: COOLANT_IN
+              connection_size: UNKNOWN
+              gender: F
+
+pipes:
+    hose_19mm:
+        label: "19MM RADIATOR HOSE"
+        material: Rubber
+        size: "19mm"
+
+    pex_16mm_underfloor:
+        label: "16MM PEX UNDERFLOOR HEATING LOOP"
+        material: PEX
+        size: "16mm"
+        color: "#f97316"
+
+connections:
+    # Heater loop: tank low → heater → tank high (heater has built-in pump)
+    - - diesel_heater_10kw:COOLANT_IN
+      - hose_19mm
+      - coolant_tank_8l:LOW_HEATER
+
+    - - diesel_heater_10kw:COOLANT_OUT
+      - hose_19mm
+      - coolant_tank_8l:HIGH_HEATER
+
+    # Tank low barb → tee 1
+    - - coolant_tank_8l:LOW
+      - hose_19mm
+      - tee_19mm_barb.t1:A
+
+    # Feed 1: tee 1 branch → pump 1
+    - - tee_19mm_barb.t1:C
+      - hose_19mm
+      - coolant_pump_12v.p1:INLET
+
+    # Feed 1 (underfloor heating): pump → supply fittings → PEX loop → return fittings → tank high
+    - - coolant_pump_12v.p1:OUTLET
+      - hose_19mm
+      - adapter_19mm_barb_to_1_2_bsp.
+      - adapter_pex_16mm_to_1_2_bsp.
+      - pex_16mm_underfloor^
+      - adapter_pex_16mm_to_1_2_bsp.
+      - adapter_19mm_barb_to_1_2_bsp.
+      - hose_19mm
+      - tee_19mm_barb.tr1:B
+
+    # Feed 2: tee 2 branch → pump 2
+    - - tee_19mm_barb.t1:B
+      - hose_19mm
+      - coolant_pump_12v.p2:INLET
+
+    # Kitchen tap (heat exchanger): pump → adapter → heat exchanger coolant in
+    - - coolant_pump_12v.p2:OUTLET
+      - hose_19mm
+      - adapter_19mm_barb_to_1_2_bsp_m.
+      - heat_exchanger.tap:COOLANT_IN
+
+    # Shower (heat exchanger): pump → adapter → heat exchanger coolant in
+    - - heat_exchanger.tap:COOLANT_OUT
+      - adapter_19mm_barb_to_1_2_bsp_m.
+      - hose_19mm^
+      - adapter_19mm_barb_to_1_2_bsp_m.
+      - heat_exchanger.shower:COOLANT_IN
+
+    # Heat exchanger → adapter → return manifold
+    - - tee_19mm_barb.tr1:C
+      - hose_19mm
+      - adapter_19mm_barb_to_1_2_bsp_m.
+      - heat_exchanger.shower:COOLANT_OUT
+
+    # Return manifold: all returns → tank high
+    - - coolant_tank_8l:HIGH
+      - hose_19mm
+      - tee_19mm_barb.tr1:A

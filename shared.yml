@@ -173,6 +173,11 @@ components:
         label: '16MM PEX → 1/2" BSP MALE ADAPTER'
         simple: true
 
+    adapter_19mm_barb_to_1_2_bsp:
+        template: fitting
+        label: '19MM BARB → 1/2" BSP FEMALE ADAPTER'
+        simple: true
+
     tee_pex_16mm:
         template: fitting
         label: "16MM PEX TEE"
@@ -185,4 +190,62 @@ components:
               gender: F
             - name: C
               connection_size: 16MM PEX
+              gender: F
+
+    # --- Heating / Coolant ---
+
+    tee_19mm_barb:
+        template: fitting
+        label: "19MM BARB TEE"
+        description: "Equal tee — three 19mm barbed ports"
+        ports:
+            - name: A
+              connection_size: 19MM BARB
+              gender: M
+            - name: B
+              connection_size: 19MM BARB
+              gender: M
+            - name: C
+              connection_size: 19MM BARB
+              gender: M
+
+    coolant_pump_12v:
+        template: pump
+        label: 12V COOLANT PUMP
+        description: '12V DC automotive coolant pump, 19mm (3/4") barbed inlet and outlet'
+        ports:
+            - name: INLET
+              connection_size: 19MM BARB
+              gender: M
+            - name: OUTLET
+              connection_size: 19MM BARB
+              gender: M
+
+    adapter_19mm_barb_to_1_2_bsp_m:
+        template: fitting
+        label: '19MM BARB → 1/2" BSP MALE ADAPTER'
+        description: '19mm hose barb to 1/2" BSP (DN15) male threaded adapter — screws into BSP female ports'
+        simple: true
+
+    heat_exchanger:
+        template: heater
+        label: HOT WATER HEAT EXCHANGER
+        description: >
+            Plate heat exchanger — all ports 1/2" BSP female.
+            Water side: inlet (cold) and outlet (hot).
+            Coolant side: inlet and outlet.
+        ports:
+            - name: WATER_IN
+              connection_size: '1/2" BSP'
+              gender: F
+              service_rating: potable
+            - name: WATER_OUT
+              connection_size: '1/2" BSP'
+              gender: F
+              service_rating: hot
+            - name: COOLANT_IN
+              connection_size: '1/2" BSP'
+              gender: F
+            - name: COOLANT_OUT
+              connection_size: '1/2" BSP'
               gender: F

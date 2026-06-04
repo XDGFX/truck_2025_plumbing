@@ -35,28 +35,6 @@ components:
             Ports connected via 1/2" BSP adapters with PTFE tape (NPT/BSP cross-thread).
         simple: true
 
-    heat_exchanger:
-        template: heater
-        label: HOT WATER HEAT EXCHANGER
-        description: >
-            Plate heat exchanger — all ports 1/2" BSP female.
-            Water side: inlet (cold) and outlet (hot).
-            Coolant side: inlet and outlet (not yet connected).
-        ports:
-            - name: WATER_IN
-              connection_size: '1/2" BSP'
-              gender: F
-              service_rating: potable
-            - name: WATER_OUT
-              connection_size: '1/2" BSP'
-              gender: F
-              service_rating: hot
-            - name: COOLANT_IN
-              connection_size: '1/2" BSP'
-              gender: F
-            - name: COOLANT_OUT
-              connection_size: '1/2" BSP'
-              gender: F
 
     kitchen_tap:
         template: fixture
@@ -98,12 +76,6 @@ components:
     outdoor_tap:
         template: fixture
         label: OUTDOOR TAP
-        simple: true
-
-    solenoid_valve_shower:
-        template: valve
-        label: '1/2" SOLENOID VALVE (M-M)'
-        description: 'Normally-closed solenoid valve, 1/2" BSP male both sides — shower fill control'
         simple: true
 
     shower_fill:

@@ -86,13 +86,11 @@ components:
     adapter_dwv_1_5_bsp_to_40mm:
         template: fitting
         label: 'DWV ADAPTER 1-1/2" BSP FEMALE → 40MM BARB'
-        description: 'DWV reducer fitting — 1-1/2" BSP female socket to 40mm barbed spigot'
         simple: true
 
     adapter_25mm_barb_to_1_5_bsp:
         template: fitting
         label: '25MM BARB → 1-1/2" BSP MALE ADAPTER'
-        description: '25mm barbed inlet to 1-1/2" BSP male threaded outlet'
         simple: true
 
     tee_25mm_barb:
@@ -113,13 +111,11 @@ components:
     adapter_10mm_barb_to_3_4_bsp:
         template: fitting
         label: '10MM BARB → 3/4" BSP MALE ADAPTER'
-        description: '10mm barbed inlet to 3/4" BSP male threaded outlet'
         simple: true
 
     tee_10mm_barb:
         template: fitting
         label: "10MM BARB TEE"
-        description: "Equal tee — three 10mm barbed ports"
         ports:
             - name: A
               connection_size: 10MM BARB
@@ -131,30 +127,9 @@ components:
               connection_size: 10MM BARB
               gender: M
 
-    adapter_jg_12mm_to_3_4_bsp:
-        template: fitting
-        label: '12MM JOHN GUEST → 3/4" BSP MALE ADAPTER'
-        description: 'John Guest 12mm push-fit to 3/4" BSP male thread'
-        manufacturer: John Guest
-        simple: true
-
     bung_3_4_bsp:
         template: fitting
         label: '3/4" BSP MALE BUNG'
-        description: '3/4" BSP male plug for blanking unused tank ports'
-        simple: true
-
-    flex_union_40mm:
-        template: fitting
-        label: "40MM FLEXIBLE UNION"
-        description: "Flexible disconnect union for 40mm DWV pipe; allows tank removal without disturbing fixed pipework"
-        simple: true
-
-    reducer_1_5_bsp_to_3_4_bsp:
-        template: fitting
-        label: '1-1/2" TO 3/4" BSP REDUCER'
-        description: 'Reducing adapter — 1-1/2" BSP female inlet to 3/4" BSP outlet. Exact fitting TBD.'
-        notes: "Fitting type and sourcing TBD"
         simple: true
 
     solenoid_valve_3_4:
@@ -203,7 +178,6 @@ components:
     tee_19mm_barb:
         template: fitting
         label: "19MM BARB TEE"
-        description: "Equal tee — three 19mm barbed ports"
         ports:
             - name: A
               connection_size: 19MM BARB
@@ -230,7 +204,6 @@ components:
     adapter_19mm_barb_to_1_2_bsp_m:
         template: fitting
         label: '19MM BARB → 1/2" BSP MALE ADAPTER'
-        description: '19mm hose barb to 1/2" BSP (DN15) male threaded adapter — screws into BSP female ports'
         simple: true
 
     heat_exchanger:
@@ -253,5 +226,16 @@ components:
               connection_size: '1/2" BSP'
               gender: F
             - name: COOLANT_OUT
+              connection_size: '1/2" BSP'
+              gender: F
+
+    check_valve_1_2:
+        template: valve
+        label: '1/2" CHECK VALVE'
+        ports:
+            - name: IN
+              connection_size: '1/2" BSP'
+              gender: F
+            - name: OUT
               connection_size: '1/2" BSP'
               gender: F

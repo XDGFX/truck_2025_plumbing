@@ -35,7 +35,6 @@ components:
             Ports connected via 1/2" BSP adapters with PTFE tape (NPT/BSP cross-thread).
         simple: true
 
-
     kitchen_tap:
         template: fixture
         label: KITCHEN TAP
@@ -159,4 +158,8 @@ connections:
       - pipe_pex_16mm
       - adapter_pex_16mm_to_1_2_bsp.
       - solenoid_valve_1_2
+      - check_valve_1_2:IN
+
+    - - check_valve_1_2:OUT
+      - adapter_19mm_barb_to_1_2_bsp_m.
       - shower_fill
